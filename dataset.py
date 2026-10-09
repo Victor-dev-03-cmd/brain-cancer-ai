@@ -1,26 +1,42 @@
+import os
 import torch
 from torch.utils.data import Dataset
 import monai
 from monai.transforms import (
-    Compose, EnsureChannelFirstd, Resized, ScaleIntensityRanged
+    Compose, LoadImaged, EnsureChannelFirstd, Orientationd,
+    ScaleIntensityRanged, CropForegroundd, Resized, EnsureTyped
 )
 
-class BrainTumorDataset(Dataset):
+def get_brats_transforms():
     """
-    3D MRI Medical Image Pipeline for Glioblastoma Research
-    Input: 4 Channels (T1, T1ce, T2, FLAIR)
-    Output: 3 Classes (Background, Edema, Enhancing Tumor Core)
+    Real 3D Medical MRI Preprocessing Transformations using MONAI
+    - Intensity Normalization
+    - RAS Orientation Standard
+    - Resizing to 64x64x64 for GPU Training Efficiency
     """
-    def __init__(self, num_samples=20, spatial_size=(64, 64, 64)):
-        self.num_samples = num_samples
-        self.spatial_size = spatial_size
+    return Compose([
+        LoadImaged(keys=["image", "label"]),
+        EnsureChannelFirstd(keys=["image", "label"]),
+        Orientationd(keys=["image", "label"], axcodes="RAS"),
+        ScaleIntensityRanged(keys=["image"], a_min=0, a_max=255, b_min=0.0, b_max=1.0, clip=True),
+        CropForegroundd(keys=["image", "label"], source_key="image"),
+        Resized(keys=["image", "label"], spatial_size=(64, 64, 64)),
+        EnsureTyped(keys=["image", "label"]),
+    ])
+
+class RealBraTSDataset(Dataset):
+    """
+    Real BraTS Dataset Wrapper
+    Expected data structure: List of dicts with 'image' and 'label' file paths (.nii.gz)
+    """
+    def __init__(self, data_list, transforms=None):
+        self.data_list = data_list
+        self.transforms = transforms or get_brats_transforms()
 
     def __len__(self):
-        return self.num_samples
+        return len(self.data_list)
 
     def __getitem__(self, idx):
-        # 4 MRI Modalities
-        images = torch.randn(4, *self.spatial_size)
-        # 3 Tumor Classes Mask
-        masks = torch.randint(0, 3, self.spatial_size, dtype=torch.long)
-        return images, masks
+        item = self.data_list[idx]
+        data = self.transforms(item)
+        return data["image"], data["label"]
