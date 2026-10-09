@@ -6,11 +6,10 @@ from monai.transforms import (
 )
 
 
-def _remap_brats_label(label):
+def _remap_brats_label(x):
     """Remap BraTS label 4 → 3 so classes are strictly [0, 1, 2, 3]."""
-    out = label.copy()
-    out[label == 4] = 3
-    return out
+    x[x == 4] = 3
+    return x
 
 
 def get_brats_transforms():
