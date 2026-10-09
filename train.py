@@ -3,7 +3,7 @@ import torch
 from torch.utils.data import DataLoader
 from model import UNet3D
 from losses import HybridDiceFocalLoss
-from dataset import RealBraTSDataset, get_brats_transforms
+from dataset import get_brats_transforms
 from tqdm import tqdm
 from monai.apps import DecathlonDataset
 
@@ -48,8 +48,9 @@ def main():
     model.train()
     for epoch in range(epochs):
         running_loss = 0.0
-        for images, masks in tqdm(train_loader, desc=f"Epoch [{epoch+1}/{epochs}]"):
-            images, masks = images.to(device), masks.to(device)
+        for batch_data in tqdm(train_loader, desc=f"Epoch [{epoch+1}/{epochs}]"):
+            images = batch_data["image"].to(device)
+            masks = batch_data["label"].to(device)
             
             # Squeeze mask channel if necessary
             if masks.dim() == 5 and masks.shape[1] == 1:
