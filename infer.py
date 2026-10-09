@@ -25,11 +25,12 @@ def run_inference():
 
     # 2. Load a real validation sample from DecathlonDataset
     data_dir = "./data/BraTS"
+    os.makedirs(data_dir, exist_ok=True)
     val_ds = DecathlonDataset(
         root_dir=data_dir,
         task="Task01_BrainTumour",
         section="validation",
-        download=False,
+        download=True,
         transform=get_brats_transforms(),
         val_frac=0.2,
     )
