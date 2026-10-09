@@ -19,7 +19,7 @@ def main():
     model = UNet3D(in_channels=4, num_classes=3).to(device)
     criterion = HybridDiceFocalLoss()
     optimizer = torch.optim.AdamW(model.parameters(), lr=1e-3, weight_decay=1e-4)
-    scaler = GradScaler(enabled=torch.cuda.is_available())
+    scaler = torch.amp.GradScaler('cuda', enabled=torch.cuda.is_available())
 
     # 3. Training Loop
     epochs = 3
@@ -34,7 +34,7 @@ def main():
             optimizer.zero_grad()
             
             # AMP Mixed Precision Forward Pass
-            with autocast(enabled=torch.cuda.is_available()):
+            with torch.amp.autocast('cuda', enabled=torch.cuda.is_available()):
                 outputs = model(images)
                 loss, d_loss, f_loss = criterion(outputs, masks)
 
