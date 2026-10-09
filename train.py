@@ -15,7 +15,7 @@ def main():
     data_dir = "./data/BraTS"
     os.makedirs(data_dir, exist_ok=True)
     
-    print("\nReal BraTS (Task01_BrainTumour) Dataset லோட் செய்யப்படுகிறது...")
+    print("\nReal BraTS (Task01_BrainTumour) Dataset is Loading Now...")
     try:
         train_ds = DecathlonDataset(
             root_dir=data_dir,
@@ -32,7 +32,8 @@ def main():
         return
 
     # 2. Model, Loss, Optimizer & AMP Scaler
-    model = UNet3D(in_channels=4, num_classes=3).to(device)
+    # num_classes=4 (0: Background, 1: Core, 2: Edema, 3: Enhancing Tumor)
+    model = UNet3D(in_channels=4, num_classes=4).to(device)
     criterion = HybridDiceFocalLoss()
     optimizer = torch.optim.AdamW(model.parameters(), lr=1e-3, weight_decay=1e-4)
     scaler = torch.amp.GradScaler('cuda', enabled=torch.cuda.is_available())
