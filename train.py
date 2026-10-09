@@ -50,9 +50,10 @@ def main():
         running_loss = 0.0
         for batch_data in tqdm(train_loader, desc=f"Epoch [{epoch+1}/{epochs}]"):
             images = batch_data["image"].to(device)
-            masks = batch_data["label"].to(device)
+            # LongTensor ஆக மாற்றுவது (Fixes RuntimeError)
+            masks = batch_data["label"].to(device, dtype=torch.long)
             
-            # Squeeze mask channel if necessary
+            # Squeeze mask channel if necessary (e.g., [B, 1, D, H, W] -> [B, D, H, W])
             if masks.dim() == 5 and masks.shape[1] == 1:
                 masks = masks.squeeze(1)
 
